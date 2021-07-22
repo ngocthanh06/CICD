@@ -1,27 +1,39 @@
 version: 2
 
 jobs:
+  build:
+    docker:
+      - image: circleci/php:7.2-stretch
+
+    steps:
+      - checkout
   build1:
     docker:
       - image: buildpack-deps:trusty
-        auth:
-          username: mydockerhub-user
-          password: $DOCKERHUB_PASSWORD
       - image: postgres:9.4.1
-        auth:
-          username: mydockerhub-user 
-          password: $DOCKERHUB_PASSWORD
-        environment:
-          POSTGRES_USER: root
+    steps:
+      - checkout
   build2:
     machine:
       image: ubuntu-2004:202010-01
+    steps:
+      - checkout
   build3:
     macos:
       xcode: "11.3.0"
+    steps:
+      - checkout
+
 workflows:
-  jobs:
-    build_and_test:
-      - build1
-      - build2
-      # - build3
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - build1:
+          requires:
+          - build
+      - build2:
+          requires:
+          - build1
+      - hold:
+          type: approval
